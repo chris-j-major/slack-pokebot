@@ -4,7 +4,7 @@ const geolib = require('geolib');
 const geocoder = require('geocoder');
 const _ = require('lodash');
 
-const reversGeoCodeCache = {};
+const reverseGeoCodeCache = {};
 
 function getDistance(a, b) {
   return geolib.getDistance(a, b);
@@ -12,7 +12,9 @@ function getDistance(a, b) {
 
 function convertGeoDataToFormatedString(data) {
   const streets = _.filter(data, (e) => e.types.indexOf('street_address') !== -1);
-  if (streets.length === 0) return null;
+  if (streets.length === 0) {
+    return null;
+  }
   const parts = _.filter(streets[0].address_components,
     (e) => (e.types.indexOf('street_number') !== -1) || (e.types.indexOf('route') !== -1));
   const stringSegments = _.map(parts, (e) => e.short_name || e.long_name);
@@ -21,23 +23,23 @@ function convertGeoDataToFormatedString(data) {
 
 function reverseGeoCode(location, callback) {
   const hash = `${location.latitude},${location.longitude}`;
-  if (!reversGeoCodeCache[hash]) {
+  if (!reverseGeoCodeCache[hash]) {
     geocoder.reverseGeocode(location.latitude, location.longitude, (err, data) => {
       if (data && data.results) {
         const formattedResults = convertGeoDataToFormatedString(data.results);
-        reversGeoCodeCache[hash] = formattedResults;
+        reverseGeoCodeCache[hash] = formattedResults;
         if (formattedResults) {
           callback(` (${formattedResults})`);
         } else {
           callback('');
         }
       } else {
-        reversGeoCodeCache[hash] = '';
+        reverseGeoCodeCache[hash] = '';
         callback('');
       }
     });
   } else {
-    callback(reversGeoCodeCache[hash]);
+    callback(reverseGeoCodeCache[hash]);
   }
 }
 
